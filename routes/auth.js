@@ -4,17 +4,17 @@ const MySql = require("../routes/utils/MySql");
 const DButils = require("../routes/utils/DButils");
 const bcrypt = require("bcrypt");
 
-router.post("/Register", async (req, res, next) => {
+router.post("/User/SignUp", async (req, res, next) => {
   try {
     // parameters exists
     // valid parameters
     // username exists
     let user_details = {
-      username: req.body.username,
+      username: req.body.userLogIn.username,
+      password: req.body.userLogIn.password,
       firstname: req.body.firstname,
       lastname: req.body.lastname,
-      country: req.body.country,
-      password: req.body.password,
+      country: req.body.country,      
       email: req.body.email,
       profilePic: req.body.profilePic
     }
@@ -39,7 +39,7 @@ router.post("/Register", async (req, res, next) => {
   }
 });
 
-router.post("/Login", async (req, res, next) => {
+router.post("/User/SignIn", async (req, res, next) => {
   try {
     // check that username exists
     const users = await DButils.execQuery("SELECT username FROM users");

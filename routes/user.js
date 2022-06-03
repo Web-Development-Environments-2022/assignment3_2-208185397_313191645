@@ -24,7 +24,7 @@ router.use(async function (req, res, next) {
 /**
  * This path gets body with recipeId and save this recipe in the favorites list of the logged-in user
  */
-router.post('/favorites', async (req,res,next) => {
+router.post('/User/FavoriteRecipes', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
     const recipe_id = req.body.recipeId;
@@ -38,7 +38,7 @@ router.post('/favorites', async (req,res,next) => {
 /**
  * This path returns the favorites recipes that were saved by the logged-in user
  */
-router.get('/favorites', async (req,res,next) => {
+router.get('/User/FavoriteRecipes', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
     let favorite_recipes = {};
@@ -52,7 +52,20 @@ router.get('/favorites', async (req,res,next) => {
   }
 });
 
+// get user's recepies
+router.get('/User/MyRecipees', async(req,res,next) => {
 
 
+})
+
+// create a recepie for user
+router.post('/User/MyRecipees', async(req,res,next) => {
+
+
+})
+
+router.get('/User/LastSeen', async(req, res,next) =>{
+  
+})
 
 module.exports = router;

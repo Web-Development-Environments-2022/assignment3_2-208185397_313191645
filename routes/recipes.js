@@ -2,36 +2,46 @@ var express = require("express");
 var router = express.Router();
 const recipes_utils = require("./utils/recipes_utils");
 
-router.get("/", (req, res) => res.send("im here"));
-
 /**
  * get 3 random recipes
  */
 
-router.get('/Recipes/Random', async (req,res,next)=>{
-
+router.get('/Random', async (req,res,next)=>{
+  try {
+    const user_id = req.session.user_id; // maybe null
+    const randoms = await recipes_utils.getRandomRecipes(user_id);
+    res.send(randoms);
+  } catch (error) {
+    next(error);
+  }
 })
 
 /**
  * get options for recipe search
  */
  router.get('/Options/RecipeSearch', async (req,res,next)=>{
-
+  try {
+    const options = await recipes_utils.getOptions();
+    res.send(options);
+  } catch (error) {
+    next(error);
+  }
 })
 
 /**
  * search for recipes
  */
- router.get('/Recipes', async (req,res,next)=>{
+ router.get('/', async (req,res,next)=>{
 
 })
 
 /**
  * This path returns a full details of a recipe by its id
  */
-router.get("/Recipes/ExtendedRecipes/:recipeId", async (req, res, next) => {
+router.get("/ExtendedRecipes/:recipeId", async (req, res, next) => {
   try {
-    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
+    const user_id = req.session.user_id; // maybe null
+    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId, user_id);
     res.send(recipe);
   } catch (error) {
     next(error);
@@ -41,7 +51,7 @@ router.get("/Recipes/ExtendedRecipes/:recipeId", async (req, res, next) => {
 /**
  * get family recipes
  */
- router.get('/Recipes/FamilyRecipes', async (req,res,next)=>{
+ router.get('/FamilyRecipes', async (req,res,next)=>{
 
 })
 

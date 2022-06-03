@@ -53,13 +53,13 @@ router.get('/User/FavoriteRecipes', async (req,res,next) => {
 });
 
 // get user's recepies
-router.get('/User/MyRecipees', async(req,res,next) => {
+router.get('/User/MyRecipes', async(req,res,next) => {
 
 
 })
 
 // create a recepie for user
-router.post('/User/MyRecipees', async(req,res,next) => {
+router.post('/User/MyRecipes', async(req,res,next) => {
 
 
 })

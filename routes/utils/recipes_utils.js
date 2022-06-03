@@ -103,25 +103,7 @@ async function getRandomRecipesFromApi(recipe_amount ,user_id){
             apiKey: process.env.spooncular_apiKey
         }
     });
-    let to_return = []
-    for(const element of data.data.recipes){
-        let alreadyWatched = await checkUserRecipeInTable("O"+element.id.toString(), user_id, "recipeseen")
-        let inFavorites = await checkUserRecipeInTable("O"+element.id.toString(), user_id, "favoriterecipes")
-        to_return.push(
-            {
-                id: "O"+element.id.toString(),
-                title: element.title,
-                prepTime: element.readyInMinutes,
-                popularty: element.aggregateLikes,
-                glutFree: element.glutenFree,
-                vegan: element.vegan,
-                alreadyWatched: alreadyWatched,
-                inFavorites: inFavorites,
-                imageUri: element.image
-            }
-        );
-    }
-    return to_return;  
+    return await adjustApiJson(data.data.recipes, user_id);
 }
 
 async function checkUserRecipeInTable(recipe_id, user_id, table_name){
@@ -161,8 +143,87 @@ async function getOptions(){
     }
 }
 
+async function searchRecipes(amount, search, cousine, diet, intolerances, user_id){
+    let spoonacular_dat = await getApiRecipes(amount, search, cousine, diet, intolerances, user_id);
+    if(cousine!=undefined || diet!=undefined || intolerances!=undefined) return spoonacular_dat;
+    // not filtered so we can return also local data    
+    let local_dat = await getDbRecipes(amount, search, user_id);
+    let total_data = spoonacular_dat.concat(local_dat);
+    // shuffle and return top <amount>
+    total_data = total_data
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value)
+    return total_data.slice(0,amount);
+}
+
+async function getDbRecipes(amount, search, user_id){
+    const data = await DButils.execQuery(`SELECT * FROM InnerRecipes WHERE title like '%${search}%' LIMIT ${amount};`);
+    let to_ret = [];
+    for (let recipe of data){
+        let alreadyWatched = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "recipeseen")
+        let inFavorites = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "favoriterecipes")
+        to_ret.push(
+            {
+                id:"I"+recipe.id.toString(),
+                title: recipe.title,
+                prepTime: recipe.prep_time,                
+                popularity: recipe.popularity,
+                //prepInstructions: recipe.prep_instructions,
+                //ingredients: recipe.ingredients,
+                //numberOfDishes: recipe.number_of_dishes,
+                glutenFree: (recipe.gluten_free.data==1),
+                vegan: (recipe.vegan.data==1),                
+                alreadyWatched: alreadyWatched,
+                inFavorites: inFavorites,
+                imageUri: recipe.image_uri
+            }
+        );
+    }
+    return to_ret;
+}
+
+async function getApiRecipes(amount, search, cousine, diet, intolerances, user_id){
+    let data = await axios.get(`${api_domain}/complexSearch`, {
+        params: {
+            query : search,
+            number : amount,
+            // client sends as list, api expects comma seperated
+            excludeCuisine: Array.isArray(cousine) ? cousine.join() : cousine,
+            intolerances : Array.isArray(intolerances) ? intolerances.join() : intolerances,
+            diet : diet,
+            addRecipeInformation : true,
+            apiKey: process.env.spooncular_apiKey
+        }
+    });
+    return await adjustApiJson(data.data.results, user_id);
+}
+
+async function adjustApiJson(api_data, user_id){
+    // change the spooncular api format to ours
+    let to_return = []
+    for(const element of api_data){
+        let alreadyWatched = await checkUserRecipeInTable("O"+element.id.toString(), user_id, "recipeseen")
+        let inFavorites = await checkUserRecipeInTable("O"+element.id.toString(), user_id, "favoriterecipes")
+        to_return.push(
+            {
+                id: "O"+element.id.toString(),
+                title: element.title,
+                prepTime: element.readyInMinutes,
+                popularty: element.aggregateLikes,
+                glutFree: element.glutenFree,
+                vegan: element.vegan,
+                alreadyWatched: alreadyWatched,
+                inFavorites: inFavorites,
+                imageUri: element.image
+            }
+        );
+    }
+    return to_return;
+}
+
 exports.getRecipeDetails = getRecipeDetails;
 exports.getRandomRecipes = getRandomRecipes;
 exports.getOptions = getOptions;
-
+exports.searchRecipes = searchRecipes;
 

@@ -50,7 +50,7 @@ async function getRecipeInformationFromDb(recipe_id){
 }
 
 
-async function getRecipeDetails(recipe_id, user_id) {
+async function getRecipeDetails(recipe_id, user_id, add_to_watched) {
     let datasource = recipe_id.substring(0,1)
     recipe_id = recipe_id.substring(1)
     let recipe_info = null;
@@ -72,7 +72,8 @@ async function getRecipeDetails(recipe_id, user_id) {
     let inFavorites = await checkUserRecipeInTable(id, user_id, "favoriterecipes")
     
     //user watched the recipe
-    if(user_id != undefined) await addUserRecipeToWatched(id, user_id) 
+    if(user_id != undefined && add_to_watched) 
+        await addUserRecipeToWatched(id, user_id) 
     return {
         recepiePreview: {
             id: id,
@@ -158,29 +159,8 @@ async function searchRecipes(amount, search, cousine, diet, intolerances, user_i
 }
 
 async function getDbRecipes(amount, search, user_id){
-    const data = await DButils.execQuery(`SELECT * FROM InnerRecipes WHERE title like '%${search}%' LIMIT ${amount};`);
-    let to_ret = [];
-    for (let recipe of data){
-        let alreadyWatched = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "recipeseen")
-        let inFavorites = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "favoriterecipes")
-        to_ret.push(
-            {
-                id:"I"+recipe.id.toString(),
-                title: recipe.title,
-                prepTime: recipe.prep_time,                
-                popularity: recipe.popularity,
-                //prepInstructions: recipe.prep_instructions,
-                //ingredients: recipe.ingredients,
-                //numberOfDishes: recipe.number_of_dishes,
-                glutenFree: (recipe.gluten_free.data==1),
-                vegan: (recipe.vegan.data==1),                
-                alreadyWatched: alreadyWatched,
-                inFavorites: inFavorites,
-                imageUri: recipe.image_uri
-            }
-        );
-    }
-    return to_ret;
+    return queryAndAdjustDb(`SELECT * FROM InnerRecipes 
+        WHERE title like '%${search}%' LIMIT ${amount};`,user_id);
 }
 
 async function getApiRecipes(amount, search, cousine, diet, intolerances, user_id){
@@ -222,8 +202,52 @@ async function adjustApiJson(api_data, user_id){
     return to_return;
 }
 
+async function queryAndAdjustDb(query, user_id){
+    const data = await DButils.execQuery(query);
+    let to_ret = [];
+    for (let recipe of data){
+        let alreadyWatched = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "recipeseen")
+        let inFavorites = await checkUserRecipeInTable("I"+recipe.id.toString(), user_id, "favoriterecipes")
+        to_ret.push(
+            {
+                id:"I"+recipe.id.toString(),
+                title: recipe.title,
+                prepTime: recipe.prep_time,                
+                popularity: recipe.popularity,
+                //prepInstructions: recipe.prep_instructions,
+                //ingredients: recipe.ingredients,
+                //numberOfDishes: recipe.number_of_dishes,
+                glutenFree: (recipe.gluten_free.data==1),
+                vegan: (recipe.vegan.data==1),                
+                alreadyWatched: alreadyWatched,
+                inFavorites: inFavorites,
+                imageUri: recipe.image_uri
+            }
+        );
+    }
+    return to_ret;
+}
+async function getFamilyRecipes(user_id){
+    return queryAndAdjustDb
+        (`SELECT * FROM innerrecipes WHERE is_family = 1;`, user_id);
+}
+
+async function getRecipesPreview(recipes_id_array, user_id){
+    let to_ret = [];
+    let promises = [];
+    for(rec of recipes_id_array){
+        promises.push(getRecipeDetails(rec, user_id, add_to_watched = false));
+    }
+    await Promise.all(promises)
+        .then((results)=>{
+            to_ret = results.map((ret)=>ret.recepiePreview);
+        });
+    return to_ret;
+}
+
 exports.getRecipeDetails = getRecipeDetails;
 exports.getRandomRecipes = getRandomRecipes;
 exports.getOptions = getOptions;
 exports.searchRecipes = searchRecipes;
-
+exports.getFamilyRecipes = getFamilyRecipes;
+exports.getRecipesPreview = getRecipesPreview;

@@ -52,7 +52,7 @@ router.get('/Random', async (req,res,next)=>{
 router.get("/ExtendedRecipes/:recipeId", async (req, res, next) => {
   try {
     const user_id = req.session.user_id; // maybe null
-    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId, user_id);
+    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId, user_id, add_to_watched = true);
     res.send(recipe);
   } catch (error) {
     next(error);
@@ -63,7 +63,13 @@ router.get("/ExtendedRecipes/:recipeId", async (req, res, next) => {
  * get family recipes
  */
  router.get('/FamilyRecipes', async (req,res,next)=>{
-
+  try {
+    const user_id = req.session.user_id; // maybe null
+    const recipe = await recipes_utils.getFamilyRecipes(user_id);
+    res.send(recipe);
+  } catch (error) {
+    next(error);
+  }
 })
 
 module.exports = router;

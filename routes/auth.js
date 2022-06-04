@@ -12,8 +12,8 @@ router.post("/User/SignUp", async (req, res, next) => {
     let user_details = {
       username: req.body.userLogIn.username,
       password: req.body.userLogIn.password,
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
+      firstname: req.body.firstName,
+      lastname: req.body.lastName,
       country: req.body.country,      
       email: req.body.email,
       profilePic: req.body.profilePic

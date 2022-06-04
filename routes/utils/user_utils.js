@@ -19,7 +19,7 @@ async function getMyRecipes(user_id){
 }
 async function addRecipe(user_id, recepiePreview, ingredients, prepInstructions, numberOfDishes){
     await DButils.execQuery(`
-    INSERT INTO innerrecipes VALUES(default,'${recepiePreview.title}',${recepiePreview.prepTime}, 0, ${recepiePreview.glutFree},
+    INSERT INTO innerrecipes VALUES(default,'${recepiePreview.title}',${recepiePreview.prepTime}, 0, ${recepiePreview.glutenFree},
     ${recepiePreview.vegan},'${recepiePreview.imageUri}','${ingredients}', '${prepInstructions}', ${numberOfDishes}, 0, ${user_id})    
     `);
 }

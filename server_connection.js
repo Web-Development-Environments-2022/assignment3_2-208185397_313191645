@@ -74,7 +74,7 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-server.address("https://hallel-pro.cs.bgu.ac.il");
+server.address("https://ib-recipes.cs.bgu.ac.il");
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'

@@ -37,7 +37,7 @@ router.get('/Random', async (req,res,next)=>{
     let search = req.query.search;
     let cousine = req.query.cousine;
     let diet = req.query.diet;
-    let intolerances = req.query.intolerances;
+    let intolerances = req.query.intollerances;
     const user_id = req.session.user_id; // maybe null
     const results = await recipes_utils.searchRecipes(amount, search, cousine, diet, intolerances, user_id);
     res.send(results);

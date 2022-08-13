@@ -44,8 +44,8 @@ async function getRecipeInformationFromDb(recipe_id){
         prepInstructions: data[0].prep_instructions,
         ingredients: data[0].ingredients,
         numberOfDishes: data[0].number_of_dishes,
-        vegan: (data[0].vegan.data==1),
-        glutenFree: (data[0].gluten_free.data==1)
+        vegan: (data[0].vegan[0]==1),
+        glutenFree: (data[0].gluten_free[0]==1)
     }; // get first element (only one) fields needed
 }
 

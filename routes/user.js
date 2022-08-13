@@ -3,10 +3,11 @@ var router = express.Router();
 const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
 const recipe_utils = require("./utils/recipes_utils");
-
+let authenticate = true;
 /**
  * Authenticate all incoming requests by middleware
  */
+
 router.use(async function (req, res, next) {
   if (req.session && req.session.user_id) {
     DButils.execQuery("SELECT user_id FROM users").then((users) => {
@@ -15,7 +16,12 @@ router.use(async function (req, res, next) {
         next();
       }
     }).catch(err => next(err));
-  } else {
+  }
+  else if(!authenticate){
+    req.session.user_id = 2;
+    next();
+  }
+  else {
     res.sendStatus(401);
   }
 });

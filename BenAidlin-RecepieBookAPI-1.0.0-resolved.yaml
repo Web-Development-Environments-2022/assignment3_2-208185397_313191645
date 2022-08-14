@@ -1,0 +1,519 @@
+---
+openapi: 3.0.0
+info:
+  title: Recepie API
+  description: This is Ilan Korol's and Ben Aidlin's recepie web site API.
+  contact:
+    email: koroli@post.bgu.ac.il
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/BenAidlin/RecepieBookAPI/1.0.0
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: User
+  description: User related endpoints, serving a specfic user.
+- name: Recepie
+  description: Recepie related endpoints, meant to supply or update info relating general recepies in the system.
+paths:
+  /User/SignIn:
+    post:
+      tags:
+      - User
+      summary: log in
+      description: |
+        By passing user name and hashed password through body, you can log in
+        to the system
+      operationId: logIn
+      requestBody:
+        description: User log in credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogIn'
+      responses:
+        "200":
+          description: user logged in
+          headers:
+            Set-Cookie:
+              description: |
+                Contains `SessionId`, pass this cookie back in 'Signed In Users' requests.
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: invalid credentials
+  /User/SignUp:
+    post:
+      tags:
+      - User
+      summary: sign up
+      description: |
+        By passing the users details through body, you can sign up to the system
+      operationId: signUp
+      requestBody:
+        description: User details to sign in
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "200":
+          description: user signed up, and logged in
+          headers:
+            Set-Cookie:
+              description: |
+                Contains `SessionId`, pass this cookie back in 'Signed In Users' requests.
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: one or more of the details is wrong or invalid
+  /User/{userId}/MyRecepies:
+    get:
+      tags:
+      - User
+      summary: get my recepies
+      description: |
+        Get the recepies created by the user
+      operationId: getMyRecepies
+      parameters:
+      - name: userId
+        in: path
+        description: pass the user's id to get his recepies
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: recepies created by the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+        "400":
+          description: bad user id
+    post:
+      tags:
+      - User
+      summary: add a new recepie
+      description: |
+        Pass the recepie details and add it to the system as a users recepie
+      operationId: addRecepie
+      parameters:
+      - name: userId
+        in: path
+        description: pass the user's id to add to his recepies
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: Recepie to add
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtendedRecepie'
+      responses:
+        "200":
+          description: recepie added
+        "400":
+          description: recepie information is invalid or user not exists
+  /User/{userId}/FavoriteRecepies:
+    get:
+      tags:
+      - User
+      summary: get the users favorite recepies
+      description: |
+        Get the recepies the user saved in favorites
+      operationId: getFavoriteRecepies
+      parameters:
+      - name: userId
+        in: path
+        description: pass the user's id to get his favorite recepies
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: recepies favorited by the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+        "400":
+          description: bad user id
+    post:
+      tags:
+      - User
+      summary: add a new recepie to favorites
+      description: |
+        Pass the recepie details and add it to the system as a users recepie in favorites
+      operationId: addFavRecepie
+      parameters:
+      - name: userId
+        in: path
+        description: pass the user's id to add to his recepies
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: recepieId
+        in: query
+        description: the recepie id the user adds to favorites
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: recepie added to favorites
+        "400":
+          description: recepie information is invalid or user not exists
+  /User/{userId}/LastSeen:
+    get:
+      tags:
+      - User
+      summary: get users last seen recepies
+      description: |
+        Get the 3 recepies last seen by the user
+      operationId: getLastSeenRecepies
+      parameters:
+      - name: userId
+        in: path
+        description: pass the user's id to get his favorite recepies
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: 3 recepies last seen by the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+        "400":
+          description: bad user id
+  /Recepies/Random:
+    get:
+      tags:
+      - Recepie
+      summary: get 3 random recepies
+      description: |
+        Get 3 random recepies
+      operationId: getRandomRecepies
+      responses:
+        "200":
+          description: 3 random recepies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+        "400":
+          description: bad user id
+  /Options/RecepieSearch:
+    get:
+      tags:
+      - Recepie
+      summary: get the drop down menu for the recepie search
+      description: |
+        When searching for recepies, the user can select to filter cousines, diets, etc.. this request is meant to return the possible filters the user can choose.
+      operationId: getRecepieSearchOptions
+      responses:
+        "200":
+          description: the filtering options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepieOptions'
+  /Recepies:
+    get:
+      tags:
+      - Recepie
+      summary: search for recepies in the system with a query string
+      description: |
+        Search for recepies with search string, amount, and filtering
+      operationId: recepiesSearch
+      parameters:
+      - name: amount
+        in: query
+        description: how many results to return
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: search
+        in: query
+        description: search string
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: cousine
+        in: query
+        description: what cousine should the results belong to
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: diet
+        in: query
+        description: what diet should the results satisfy
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: intollerance
+        in: query
+        description: what intollerances should the dish not contain
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: the search result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+        "400":
+          description: bad request
+  /Recepies/ExtendedRecepies/{recepieId}:
+    get:
+      tags:
+      - Recepie
+      summary: get users last seen recepies
+      description: |
+        Get the 3 recepies last seen by the user
+      operationId: getExtendedRecepie
+      parameters:
+      - name: recepieId
+        in: path
+        description: pass the recepie id to get it's extended details
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: userId
+        in: query
+        description: pass the user id if he is signed in, so it can be saved as last seen, already seen, etc..
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: the full recepie object that suits the id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExtendedRecepie'
+        "404":
+          description: recepie with that recepie id doesn't exist
+  /Recepies/FamilyRecepies:
+    get:
+      tags:
+      - Recepie
+      summary: get the family recepies
+      description: |
+        Get the family recepies registered in the system - assuming they are not user dependent.
+      operationId: getFamilyRecepies
+      responses:
+        "200":
+          description: the full recepie object that suits the id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecepiePreview'
+components:
+  schemas:
+    RecepiePreview:
+      required:
+      - alreadyWatched
+      - glutFree
+      - id
+      - imageUri
+      - inFavorites
+      - popularity
+      - prepTime
+      - title
+      - vegen
+      type: object
+      properties:
+        id:
+          type: string
+          example: A1
+        title:
+          type: string
+          example: Pizza
+        prepTime:
+          type: number
+          format: minutes
+          example: 60
+        popularity:
+          type: integer
+          format: amount of likes
+          example: 3
+        glutFree:
+          type: boolean
+        vegen:
+          type: boolean
+        alreadyWatched:
+          type: boolean
+        inFavorites:
+          type: boolean
+        imageUri:
+          type: string
+          example: ./extensions/image_of_pizza.jpg
+    UserLogIn:
+      required:
+      - passwordHashed
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+          example: myUser123
+        passwordHashed:
+          type: string
+          format: SHA hashed password
+          example: GE123SSAASS
+    User:
+      required:
+      - country
+      - email
+      - firstName
+      - lastName
+      - userLogIn
+      type: object
+      properties:
+        userLogIn:
+          $ref: '#/components/schemas/UserLogIn'
+        firstName:
+          type: string
+          example: Joe
+        lastName:
+          type: string
+          example: Davidovich
+        counrty:
+          type: string
+          example: China
+        email:
+          type: string
+          format: <mailname>@<domain>
+          example: JoeDavid@Davidovich.com
+    ExtendedRecepie:
+      required:
+      - ingredient
+      - numberOfDishes
+      - prepInstructions
+      - recepiePreview
+      type: object
+      properties:
+        recepiePreview:
+          $ref: '#/components/schemas/RecepiePreview'
+        ingredient:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        prepInstructions:
+          type: string
+          format: <step number><delimiter><instruction>.
+          example: 1) boil water. 2) put coffe in cup.
+        numberOfDishes:
+          type: number
+    Ingredient:
+      required:
+      - amount
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Paprika
+        amount:
+          type: string
+          format: <amount> <units>
+          example: 1 Liter
+    RecepieOptions:
+      required:
+      - cousines
+      - diets
+      - intolerances
+      type: object
+      properties:
+        cousines:
+          type: array
+          format: array of cousines
+          example:
+          - African
+          - Jewish
+          items:
+            type: string
+        diets:
+          type: array
+          format: array of diets
+          example:
+          - Vegeterian
+          - Vegen
+          items:
+            type: string
+        intolerances:
+          type: array
+          format: array of intolerances
+          example:
+          - Eggs
+          - Peanuts
+          items:
+            type: string

@@ -18,10 +18,11 @@ async function getMyRecipes(user_id){
     return recipes_id;
 }
 async function addRecipe(user_id, recepiePreview, ingredients, prepInstructions, numberOfDishes){
-    await DButils.execQuery(`
-    INSERT INTO innerrecipes VALUES(default,'${recepiePreview.title}',${recepiePreview.prepTime}, 0, ${recepiePreview.glutenFree},
-    ${recepiePreview.vegan},'${recepiePreview.imageUri}','${ingredients}', '${prepInstructions}', ${numberOfDishes}, 0, ${user_id})    
-    `);
+    const check = `
+    INSERT INTO innerrecipes VALUES(default,'${mysql_real_escape_string(recepiePreview.title)}',${recepiePreview.prepTime}, 0, ${recepiePreview.glutenFree},
+    ${recepiePreview.vegan},'${mysql_real_escape_string(recepiePreview.imageUri)}','${mysql_real_escape_string(ingredients)}', '${mysql_real_escape_string(prepInstructions)}', ${numberOfDishes}, 0, ${user_id})    
+    `;
+    await DButils.execQuery(check);
 }
 
 async function getUserLastSeen(user_id){
@@ -29,7 +30,32 @@ async function getUserLastSeen(user_id){
         FROM recipeseen WHERE user_id = ${user_id} ORDER BY id desc LIMIT 3;`);
     return recipes_id;
 }
-
+function mysql_real_escape_string (str) {
+    return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, function (char) {
+        switch (char) {
+            case "\0":
+                return " ";
+            case "\x08":
+                return " ";
+            case "\x09":
+                return " ";
+            case "\x1a":
+                return " ";
+            case "\n":
+                return " ";
+            case "\r":
+                return " ";
+            case "\"":
+            case "'":
+            case "\\":
+            case "%":
+                return "\\"+char; // prepends a backslash to backslash, percent,
+                                  // and double/single quotes
+            default:
+                return char;
+        }
+    });
+}
 exports.markAsFavorite = markAsFavorite;
 exports.getFavoriteRecipes = getFavoriteRecipes;
 exports.getMyRecipes = getMyRecipes;
